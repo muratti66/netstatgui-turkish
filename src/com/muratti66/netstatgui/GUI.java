@@ -48,6 +48,7 @@ public class GUI extends javax.swing.JFrame {
         setAlwaysOnTop(true);
 
         refreshBox.setModel(new javax.swing.DefaultComboBoxModel<>(new String[] { "1", "5", "10", "30", "60" }));
+        refreshBox.setSelectedIndex(1);
         refreshBox.setCursor(new java.awt.Cursor(java.awt.Cursor.DEFAULT_CURSOR));
         refreshBox.setName("Time Selection"); // NOI18N
         refreshBox.addActionListener(new java.awt.event.ActionListener() {
