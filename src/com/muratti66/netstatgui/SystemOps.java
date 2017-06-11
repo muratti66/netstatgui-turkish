@@ -20,59 +20,66 @@ import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import static com.muratti66.netstatgui.Main.logger;
 import java.io.InputStream;
-import java.util.Map;
+import static com.muratti66.netstatgui.Main.logger;
 
 /**
  * This includes class system methods
  */
 public class SystemOps {
-    private static ArrayList connPool = new ArrayList();
     private static boolean exit = false;
-    public static ArrayList ipPool = new ArrayList();
-    public static HashMap procPool = new HashMap();
-    
+    private static String cmdOutLine = "";
+    private static String appName, connRoute, devicE, fD, line, par, pID, 
+            pid, protO, sizeOf, statuS, tempParse, tempParseTwo, typE, 
+            unq, useR;
+    private static String[] parSplit, parts;
+    private static ArrayList connFirstTempPool, connPool, connTempPool, output;
     private static HashMap temp;
-    final public static String osType = 
-            System.getProperty("os.name");
+    private static BufferedReader br, reader, readerTwo;
+    private static InputStream is;
+    private static InputStreamReader isr;
+    
     final private static String[] mNetCmd = {"/bin/bash", "-c", 
         "/usr/sbin/lsof -nP | grep TCP |grep -v \"LISTEN\""};
     final private static String[] lNetCmd = {"/bin/bash", "-c", 
         "/usr/bin/lsof -nP | grep TCP |grep -v \"LISTEN\""};
-    final private static String[] msNetCmd = 
-    {"netstat", "-ont"};
+    final private static String[] msNetCmd = {"netstat", "-ont"};
     private static long timeInterval = 1000;
     private static final Logger LOGGER = Logger.
             getLogger(Main.class.getName());
+    public static ArrayList ipPool = new ArrayList();
+    public static HashMap procPool = new HashMap();
+    final public static String osType = System.getProperty("os.name");
 
     /**
      * Command Execute Wrapper
+     * @param   command   The commands are given in fragments (String[])
+     * @return Arraylist
      */
     private static ArrayList execCMD(String[] command) {
-        ArrayList output = new ArrayList();
+        ArrayList out = new ArrayList();
         Process p;
         try {
             p = Runtime.getRuntime().exec(command);
-            BufferedReader reader =
-                new BufferedReader(new InputStreamReader(p.getInputStream()));
-            BufferedReader reader2 =
-                new BufferedReader(new InputStreamReader(p.getErrorStream()));
-            String line = "";
-            while ((line = reader.readLine())!= null) {
-                if (line != null && line.length() > 0) {
-                    output.add(line);
+            reader = new BufferedReader(new InputStreamReader(
+                    p.getInputStream()));
+            readerTwo = new BufferedReader(new InputStreamReader(
+                    p.getErrorStream()));
+            while ((cmdOutLine = reader.readLine())!= null) {
+                if (cmdOutLine != null && cmdOutLine.length() > 0) {
+                    out.add(cmdOutLine);
                 }
             }
-            while ((line = reader2.readLine())!= null) {
-                if (line != null && line.length() > 0) {
-                    output.add(line);
+            cmdOutLine = "";
+            while ((cmdOutLine = readerTwo.readLine())!= null) {
+                if (cmdOutLine != null && cmdOutLine.length() > 0) {
+                    out.add(cmdOutLine);
                 }
             }
         } catch (Exception e) {
             logger.log( Level.INFO, e.toString(), e );
         }
-        return output;
+        return out;
     }
     /**
      * Connection pool start; interface pool initialize, 
@@ -130,20 +137,17 @@ public class SystemOps {
             System.exit(9);
         }
         // Push background task
-        ArrayList output;
-        ArrayList connTempPool = new ArrayList();
-        ArrayList connFirstTempPool = new ArrayList();
+        connTempPool = new ArrayList();
+        connFirstTempPool = new ArrayList();
         if (osType.contains("Windows")) {
             output = execCMD(cmd);
             output.remove(0); 
             output.remove(0);
             Collections.sort(output);
             output.removeAll(Collections.singleton(null));
-            String pID, useR, fD, devicE, protO, 
-                    connRoute, statuS;
             for (int i = 0; i < output.size(); i++) {
-                String par = output.get(i).toString();
-                String[] parSplit = par.split("\\s+");
+                par = output.get(i).toString();
+                parSplit = par.split("\\s+");
                 protO = parSplit[1]; devicE = parSplit[6]; 
                 connRoute = parSplit[2] + "->" + parSplit[3];
                 pID = parSplit[5]; statuS = parSplit[4]; 
@@ -154,10 +158,10 @@ public class SystemOps {
                 temp.put("typE", "NONE"); temp.put("devicE", devicE);
                 temp.put("sizeOf", "NONE"); temp.put("protO", protO);
                 temp.put("connRoute", connRoute); temp.put("statuS", statuS);
-                String tempParse = connRoute.toString().
+                tempParse = connRoute.toString().
                     split("->")[1].toString();
-                String tempParse2 = tempParse.split(":")[0];
-                if (ipPool.contains(tempParse2)) {
+                tempParseTwo = tempParse.split(":")[0];
+                if (ipPool.contains(tempParseTwo)) {
                     connFirstTempPool.add(temp);
                 } else {
                     connTempPool.add(temp);
@@ -167,8 +171,6 @@ public class SystemOps {
             output = execCMD(cmd);
             Collections.sort(output);
             output.removeAll(Collections.singleton(null));
-            String appName, pID, useR, fD, typE, devicE, 
-                    sizeOf, protO, connRoute, statuS;
             for (int i = 0; i < output.size(); i++) {
                 String par = output.get(i).toString();
                 String[] parSplit = par.split("\\s+");
@@ -184,10 +186,10 @@ public class SystemOps {
                 temp.put("typE", typE); temp.put("devicE", devicE);
                 temp.put("sizeOf", sizeOf); temp.put("protO", protO);
                 temp.put("connRoute", connRoute); temp.put("statuS", statuS);
-                String tempParse = connRoute.toString().
+                tempParse = connRoute.toString().
                     split("->")[1].toString();
-                String tempParse2 = tempParse.split(":")[0];
-                if (ipPool.contains(tempParse2)) {
+                tempParseTwo = tempParse.split(":")[0];
+                if (ipPool.contains(tempParseTwo)) {
                     connFirstTempPool.add(temp);
                 } else {
                     connTempPool.add(temp);
@@ -206,7 +208,7 @@ public class SystemOps {
     }
     /** 
      * Interval updater
-     * @param dynInt int
+     * @param dynInt selected seconds set to variable in class
      */
     public static void setInterval(int dynInt) {
         timeInterval = dynInt;
@@ -253,16 +255,14 @@ public class SystemOps {
             try {
                 ProcessBuilder process = new ProcessBuilder("tasklist.exe", 
                         "/fo", "csv", "/nh");
-                Map<String, String> output = process.environment();
                 final Process start = process.start();
-                InputStream is = start.getInputStream();
-                InputStreamReader isr = new InputStreamReader(is);
-                BufferedReader br = new BufferedReader(isr);
-                String line;
+                is = start.getInputStream();
+                isr = new InputStreamReader(is);
+                br = new BufferedReader(isr);
                 while ((line = br.readLine()) != null) {
-                  String[] parts = line.split(",");
-                  String unq = parts[0].substring(1).replaceFirst(".$", "");
-                  String pid = parts[1].substring(1).replaceFirst(".$", "");
+                  parts = line.split(",");
+                  unq = parts[0].substring(1).replaceFirst(".$", "");
+                  pid = parts[1].substring(1).replaceFirst(".$", "");
                   tempProcPool.put(pid, unq);
                 }
                 procPool = tempProcPool;

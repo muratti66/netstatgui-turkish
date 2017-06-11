@@ -16,15 +16,18 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import javax.swing.JComboBox;
 import javax.swing.Timer;
+import static com.muratti66.netstatgui.SystemOps.ipPool;
 
 /**
  * Jframe extended GUI
  */
 public class GUI extends javax.swing.JFrame {
     
+    private static ArrayList pool;
     private static int selectionItems = 1000;
-    private static ArrayList ipPool = SystemOps.ipPool;
+    private static HashMap pidMap, tempMap;
     private static String trContent = "";
+    private static String appName, temppID, tempParse, tempParse2;
     /**
      * Creates new form GUI
      */
@@ -128,6 +131,7 @@ public class GUI extends javax.swing.JFrame {
     }// </editor-fold>//GEN-END:initComponents
 /**
  * Check Interval updater, using setter method
+ * @param evt   Action Event Object
  */
     private void refreshBoxActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_refreshBoxActionPerformed
         // TODO add your handling code here:
@@ -174,11 +178,10 @@ public class GUI extends javax.swing.JFrame {
     }
 /**
  * This method convert pool data to HTML
- * @return String
+ * @return  String
  */
     private static String compileNetstat() {
-        ArrayList pool = SystemOps.connPoolReturner();
-        HashMap tempMap;
+        pool = SystemOps.connPoolReturner();
         StringBuilder printStringBuilder = new StringBuilder();
         printStringBuilder.append("<html><head>");
         printStringBuilder.append("<style>"
@@ -233,18 +236,18 @@ public class GUI extends javax.swing.JFrame {
                 + "<td id=\"netstat_col7\">Durum</td></tr>");
         for (int i = 0; i < pool.size(); i++) {
             tempMap = (HashMap) pool.get(i);
-            String tempParse = tempMap.get("connRoute").toString().
+            tempParse = tempMap.get("connRoute").toString().
                     split("->")[1].toString();
-            String tempParse2 = tempParse.split(":")[0];
+            tempParse2 = tempParse.split(":")[0];
             if (ipPool.contains(tempParse2)) {
                 trContent = "style=\"color: red;\"";
             } else {
                 trContent = "";
             }
-            String appName = ""; 
-            String temppID = "";
+            appName = ""; 
+            temppID = "";
             if (SystemOps.osType.contains("Windows")) {
-                HashMap pidMap = SystemOps.procPool;
+                pidMap = SystemOps.procPool;
                 temppID = tempMap.get("pID").toString();
                 if (pidMap.containsKey(temppID)) {
                     appName = pidMap.get(temppID).toString().
